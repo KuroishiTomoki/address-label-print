@@ -1,712 +1,696 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.2">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宛名ラベル印刷ツール（3×9）</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 12px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #3498db;
+            background: #f0f7ff;
+        }
+
+        .upload-area svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+            color: #999;
+        }
+
+        .upload-area p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .upload-area .sub {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .format-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-top: 20px;
+        }
+
+        .format-info h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .format-info code {
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .preview-section {
+            display: none;
+        }
+
+        .preview-section.active {
+            display: block;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .preview-header h2 {
+            color: #333;
+            font-size: 1.3rem;
+        }
+
+        .badge {
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .preview-list {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .preview-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .preview-item .number {
+            background: #3498db;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .preview-item .info {
+            flex: 1;
+            font-size: 0.9rem;
+        }
+
+        .preview-item .name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .preview-item .address {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .page-preview {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .page-preview h3 {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .page-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            background: white;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .page-preview-cell {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 8px;
+            font-size: 0.65rem;
+            text-align: center;
+            min-height: 50px;
+        }
+
+        .page-preview-cell .cell-postal {
+            color: #666;
+        }
+
+        .page-preview-cell .cell-name {
+            font-weight: bold;
+            color: #333;
+            margin-top: 3px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .sample-download {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .sample-download a {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .sample-download a:hover {
+            text-decoration: underline;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+        }
+
+        .loading-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px 60px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Hidden render area */
+        #renderArea {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+        }
+
+        /* Print page template */
+        .print-page {
+            width: 210mm;
+            height: 297mm;
+            background: white;
+            padding: 10mm;
+            box-sizing: border-box;
+        }
+
+        .print-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(9, 1fr);
+            gap: 2mm;
+            height: 100%;
+        }
+
+        .print-label {
+            border: 0.5px solid #ccc;
+            padding: 3mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;
+            overflow: hidden;
+        }
+
+        .print-label .postal {
+            font-size: 9pt;
+            color: #333;
+            margin-bottom: 1mm;
+        }
+
+        .print-label .address {
+            font-size: 8pt;
+            color: #333;
+            line-height: 1.3;
+            margin-bottom: 2mm;
+        }
+
+        .print-label .name {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="ja"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;宛名ラベル印刷ツール（3×9）&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"&gt;&lt;/script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>* {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 100vh;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 40px 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.container {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 900px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 auto;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>h1 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 2rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-shadow: 0 2px 4px rgba(0,0,0,0.2);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.card {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 10px 40px rgba(0,0,0,0.2);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.upload-area {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 3px dashed #ddd;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 50px 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #fafafa;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.upload-area:hover, .upload-area.dragover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: #3498db;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f0f7ff;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.upload-area svg {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 60px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 60px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #999;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.upload-area p {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.1rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.upload-area .sub {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #999;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>input[type="file"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-info {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8f9fa;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-info h3 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.format-info code {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #e9ecef;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 2px 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.85rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-section {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-section.active {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: block;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-header {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: space-between;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-header h2 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1.3rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.badge {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #3498db;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 5px 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-list {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-height: 300px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow-y: auto;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-item {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f8f9fa;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 12px 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-item .number {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #3498db;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 28px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 28px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.8rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-right: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-shrink: 0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-item .info {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex: 1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-item .name {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.preview-item .address {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.85rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f5f5f5;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview h3 {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.95rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview-grid {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(3, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 5px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #ddd;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview-cell {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #f9f9f9;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 1px solid #eee;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.65rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>min-height: 50px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview-cell .cell-postal {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.page-preview-cell .cell-name {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: bold;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 3px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.button-group {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>button {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex: 1;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 1rem;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 600;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s ease;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.btn-primary {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.btn-primary:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-2px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 5px 20px rgba(52, 152, 219, 0.4);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.btn-secondary {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #e9ecef;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #666;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.btn-secondary:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: #dee2e6;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.sample-download {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-top: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.sample-download a {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #3498db;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-decoration: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 0.9rem;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.sample-download a:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-decoration: underline;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.loading-overlay {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: fixed;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>right: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>bottom: 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(0,0,0,0.7);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>z-index: 1000;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.loading-box {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translate(-50%, -50%);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 40px 60px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.loading-spinner {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 4px solid #f3f3f3;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-top: 4px solid #3498db;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 50px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 50px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>animation: spin 1s linear infinite;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin: 0 auto 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>@keyframes spin {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>0% { transform: rotate(0deg); }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>100% { transform: rotate(360deg); }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Hidden render area */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>#renderArea {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: absolute;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>left: -9999px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>top: 0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* Print page template */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-page {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 210mm;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 297mm;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: white;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 10mm;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-sizing: border-box;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-grid {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(3, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-rows: repeat(9, 1fr);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 2mm;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-label {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 0.5px solid #ccc;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 3mm;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-label .postal {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 9pt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 1mm;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-label .address {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 8pt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.3;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 2mm;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.print-label .name {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 12pt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: bold;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="container"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1&gt;📮 宛名ラベル印刷（3×9）&lt;/h1&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="upload-area" id="uploadArea"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/svg&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;p&gt;CSVファイルをドラッグ&amp;ドロップ&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;p class="sub"&gt;またはクリックしてファイルを選択&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="file" id="fileInput" accept=".csv"&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="format-info"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;📋 CSVフォーマット（ヘッダー行あり）&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;code&gt;郵便番号, 住所, 名前, 電話番号, 商品名&lt;/code&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="sample-download"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;a href="#" id="downloadSample"&gt;📥 サンプルCSVをダウンロード&lt;/a&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="card preview-section" id="previewSection"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="preview-header"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h2&gt;プレビュー&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;span class="badge" id="countBadge"&gt;0件 / 0ページ&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="preview-list" id="previewList"&gt;&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="page-preview"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;h3&gt;📄 1ページ目プレビュー（3×9 = 27件/ページ）&lt;/h3&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="page-preview-grid" id="pagePreviewGrid"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="button-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;button class="btn-secondary" id="resetBtn"&gt;リセット&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;button class="btn-primary" id="generateBtn"&gt;PDF出力&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="loading-overlay" id="loadingOverlay"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="loading-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="loading-spinner"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="loading-text"&gt;PDF生成中...&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="loading-progress" id="loadingProgress"&gt;0 / 0 ページ&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="renderArea"&gt;&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>let parsedData = [];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const COLS = 3;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const ROWS = 9;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const ITEMS_PER_PAGE = COLS * ROWS;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>const uploadArea = document.getElementById('uploadArea');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const fileInput = document.getElementById('fileInput');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const previewSection = document.getElementById('previewSection');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const previewList = document.getElementById('previewList');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const countBadge = document.getElementById('countBadge');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const generateBtn = document.getElementById('generateBtn');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const resetBtn = document.getElementById('resetBtn');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const downloadSample = document.getElementById('downloadSample');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>uploadArea.addEventListener('click', () =&gt; fileInput.click());</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>uploadArea.addEventListener('dragover', (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>uploadArea.classList.add('dragover');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>uploadArea.addEventListener('dragleave', () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>uploadArea.classList.remove('dragover');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>uploadArea.addEventListener('drop', (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>uploadArea.classList.remove('dragover');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const file = e.dataTransfer.files[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (file &amp;&amp; file.name.endsWith('.csv')) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>processFile(file);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('CSVファイルを選択してください');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>fileInput.addEventListener('change', (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const file = e.target.files[0];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (file) processFile(file);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>function processFile(file) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const reader = new FileReader();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>reader.onload = (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const text = e.target.result;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>parseCSV(text);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>};</p>
-<p class="p1"><span class="Apple-converted-space">            </span>reader.readAsText(file, 'UTF-8');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>function parseCSV(text) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const lines = text.trim().split('\n');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (lines.length &lt; 2) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('データが見つかりません');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>parsedData = [];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>for (let i = 1; i &lt; lines.length; i++) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const line = lines[i].trim();</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (!line) continue;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>const values = parseCSVLine(line);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (values.length &gt;= 3) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>parsedData.push({</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>postal: values[0]?.trim() || '',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>address: values[1]?.trim() || '',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>name: values[2]?.trim() || '',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>phone: values[3]?.trim() || '',</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>product: values[4]?.trim() || ''</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (parsedData.length === 0) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('有効なデータが見つかりません');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>showPreview();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>function parseCSVLine(line) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const result = [];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let current = '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let inQuotes = false;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; line.length; i++) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const char = line[i];</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (char === '"') {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>inQuotes = !inQuotes;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>} else if (char === ',' &amp;&amp; !inQuotes) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>result.push(current);</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>current = '';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>current += char;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>result.push(current);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>return result;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>function showPreview() {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>previewSection.classList.add('active');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const pageCount = Math.ceil(parsedData.length / ITEMS_PER_PAGE);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>countBadge.textContent = `${parsedData.length}件 / ${pageCount}ページ`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// List preview</p>
-<p class="p1"><span class="Apple-converted-space">            </span>previewList.innerHTML = parsedData.slice(0, 20).map((item, index) =&gt; `</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="preview-item"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="number"&gt;${index + 1}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="info"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="name"&gt;${escapeHtml(item.name)} 様&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="address"&gt;〒${escapeHtml(item.postal)} ${escapeHtml(item.address)}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>`).join('') + (parsedData.length &gt; 20 ? `&lt;div style="text-align:center;color:#999;padding:10px;"&gt;... 他 ${parsedData.length - 20} 件&lt;/div&gt;` : '');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>// Page grid preview (first page)</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const pagePreviewGrid = document.getElementById('pagePreviewGrid');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>let gridHtml = '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>for (let i = 0; i &lt; ITEMS_PER_PAGE; i++) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const item = parsedData[i];</p>
-<p class="p1"><span class="Apple-converted-space">                </span>if (item) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>gridHtml += `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="page-preview-cell"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="cell-postal"&gt;〒${escapeHtml(item.postal)}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="cell-name"&gt;${escapeHtml(item.name)} 様&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>gridHtml += `&lt;div class="page-preview-cell" style="background:#eee;"&gt;&lt;/div&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">            </span>pagePreviewGrid.innerHTML = gridHtml;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>function escapeHtml(text) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const div = document.createElement('div');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>div.textContent = text || '';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>return div.innerHTML;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>resetBtn.addEventListener('click', () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>parsedData = [];</p>
-<p class="p1"><span class="Apple-converted-space">            </span>previewSection.classList.remove('active');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>fileInput.value = '';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>generateBtn.addEventListener('click', async () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>if (parsedData.length === 0) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('データがありません');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const loadingOverlay = document.getElementById('loadingOverlay');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const loadingProgress = document.getElementById('loadingProgress');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>loadingOverlay.style.display = 'block';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const { jsPDF } = window.jspdf;</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const doc = new jsPDF({</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>orientation: 'portrait',</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>unit: 'mm',</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>format: 'a4'</p>
-<p class="p1"><span class="Apple-converted-space">                </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>const renderArea = document.getElementById('renderArea');</p>
-<p class="p1"><span class="Apple-converted-space">                </span>const pageCount = Math.ceil(parsedData.length / ITEMS_PER_PAGE);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>for (let page = 0; page &lt; pageCount; page++) {</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>loadingProgress.textContent = `${page + 1} / ${pageCount} ページ`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const startIdx = page * ITEMS_PER_PAGE;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const pageItems = parsedData.slice(startIdx, startIdx + ITEMS_PER_PAGE);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// Create page HTML</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>let labelsHtml = '';</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>for (let i = 0; i &lt; ITEMS_PER_PAGE; i++) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>const item = pageItems[i];</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>if (item) {</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>labelsHtml += `</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;div class="print-label"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="postal"&gt;〒${escapeHtml(item.postal)}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="address"&gt;${escapeHtml(item.address)}&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;div class="name"&gt;${escapeHtml(item.name)} 様&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>`;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>labelsHtml += `&lt;div class="print-label"&gt;&lt;/div&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const pageHtml = `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="print-page" style="width:210mm; height:297mm; background:white; padding:8mm; box-sizing:border-box; font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;div class="print-grid" style="display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(9,1fr); gap:1mm; height:100%;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>${labelsHtml}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>// Add styles for labels</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>renderArea.innerHTML = `</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>.print-label {</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>border: 0.3px solid #ccc;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>padding: 2mm 3mm;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>overflow: hidden;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>.print-label .postal {</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>font-size: 10pt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>margin-bottom: 1mm;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>.print-label .address {</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>font-size: 8pt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>line-height: 1.4;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>margin-bottom: 2mm;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>.print-label .name {</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>font-size: 14pt;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>font-weight: bold;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>color: #333;</p>
-<p class="p1"><span class="Apple-converted-space">                                </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">                            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>${pageHtml}</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>await new Promise(resolve =&gt; setTimeout(resolve, 100));</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const pageElement = renderArea.querySelector('.print-page');</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const canvas = await html2canvas(pageElement, {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>scale: 2,</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>useCORS: true,</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>logging: false,</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>width: 794,<span class="Apple-converted-space">  </span>// A4 width at 96dpi</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>height: 1123 // A4 height at 96dpi</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>if (page &gt; 0) {</p>
-<p class="p1"><span class="Apple-converted-space">                        </span>doc.addPage();</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                    </span>const imgData = canvas.toDataURL('image/png');</p>
-<p class="p1"><span class="Apple-converted-space">                    </span>doc.addImage(imgData, 'PNG', 0, 0, 210, 297);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">                </span>renderArea.innerHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">                </span>doc.save('address_labels_3x9.pdf');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>} catch (error) {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>console.error('PDF generation error:', error);</p>
-<p class="p1"><span class="Apple-converted-space">                </span>alert('PDF生成中にエラーが発生しました: ' + error.message);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>} finally {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>loadingOverlay.style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>downloadSample.addEventListener('click', (e) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>e.preventDefault();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const sampleData = `郵便番号,住所,名前,電話番号,商品名</p>
-<p class="p1">123-4567,大阪府大阪市中央区0-0-000 リバーサイドマンション203,三浦美沙,06-1234-5678,商品A</p>
-<p class="p1">100-0001,東京都千代田区千代田1-1,山田太郎,03-1234-5678,商品B</p>
-<p class="p1">150-0002,東京都渋谷区渋谷2-21-1 渋谷ヒカリエ10F,鈴木花子,03-9876-5432,商品C</p>
-<p class="p1">530-0001,大阪府大阪市北区梅田1-1-1,田中一郎,06-1111-2222,商品D</p>
-<p class="p1">160-0023,東京都新宿区西新宿2-8-1,佐藤健太,03-3333-4444,商品E</p>
-<p class="p1">460-0008,愛知県名古屋市中区栄3-5-12,高橋真理,052-222-3333,商品F`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">            </span>const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const url = URL.createObjectURL(blob);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const a = document.createElement('a');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>a.href = url;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>a.download = 'sample_addresses.csv';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>a.click();</p>
-<p class="p1"><span class="Apple-converted-space">            </span>URL.revokeObjectURL(url);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+    <div class="container">
+        <h1>📮 宛名ラベル印刷（3×9）</h1>
+
+        <div class="card">
+            <div class="upload-area" id="uploadArea">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                <p>CSVファイルをドラッグ&ドロップ</p>
+                <p class="sub">またはクリックしてファイルを選択</p>
+            </div>
+            <input type="file" id="fileInput" accept=".csv">
+
+            <div class="format-info">
+                <h3>📋 CSVフォーマット（ヘッダー行あり）</h3>
+                <code>郵便番号, 住所, 名前, 電話番号, 商品名</code>
+            </div>
+
+            <div class="sample-download">
+                <a href="#" id="downloadSample">📥 サンプルCSVをダウンロード</a>
+            </div>
+        </div>
+
+        <div class="card preview-section" id="previewSection">
+            <div class="preview-header">
+                <h2>プレビュー</h2>
+                <span class="badge" id="countBadge">0件 / 0ページ</span>
+            </div>
+
+            <div class="preview-list" id="previewList"></div>
+
+            <div class="page-preview">
+                <h3>📄 1ページ目プレビュー（3×9 = 27件/ページ）</h3>
+                <div class="page-preview-grid" id="pagePreviewGrid"></div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn-secondary" id="resetBtn">リセット</button>
+                <button class="btn-primary" id="generateBtn">PDF出力</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-box">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">PDF生成中...</div>
+            <div class="loading-progress" id="loadingProgress">0 / 0 ページ</div>
+        </div>
+    </div>
+
+    <div id="renderArea"></div>
+
+    <script>
+        let parsedData = [];
+        const COLS = 3;
+        const ROWS = 9;
+        const ITEMS_PER_PAGE = COLS * ROWS;
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewSection = document.getElementById('previewSection');
+        const previewList = document.getElementById('previewList');
+        const countBadge = document.getElementById('countBadge');
+        const generateBtn = document.getElementById('generateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadSample = document.getElementById('downloadSample');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                processFile(file);
+            } else {
+                alert('CSVファイルを選択してください');
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseCSV(text);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                alert('データが見つかりません');
+                return;
+            }
+
+            parsedData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+
+                const values = parseCSVLine(line);
+                if (values.length >= 3) {
+                    parsedData.push({
+                        postal: values[0]?.trim() || '',
+                        address: values[1]?.trim() || '',
+                        name: values[2]?.trim() || '',
+                        phone: values[3]?.trim() || '',
+                        product: values[4]?.trim() || ''
+                    });
+                }
+            }
+
+            if (parsedData.length === 0) {
+                alert('有効なデータが見つかりません');
+                return;
+            }
+
+            showPreview();
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current);
+            return result;
+        }
+
+        function showPreview() {
+            previewSection.classList.add('active');
+            const pageCount = Math.ceil(parsedData.length / ITEMS_PER_PAGE);
+            countBadge.textContent = `${parsedData.length}件 / ${pageCount}ページ`;
+
+            // List preview
+            previewList.innerHTML = parsedData.slice(0, 20).map((item, index) => `
+                <div class="preview-item">
+                    <div class="number">${index + 1}</div>
+                    <div class="info">
+                        <div class="name">${escapeHtml(item.name)} 様</div>
+                        <div class="address">〒${escapeHtml(item.postal)} ${escapeHtml(item.address)}</div>
+                    </div>
+                </div>
+            `).join('') + (parsedData.length > 20 ? `<div style="text-align:center;color:#999;padding:10px;">... 他 ${parsedData.length - 20} 件</div>` : '');
+
+            // Page grid preview (first page)
+            const pagePreviewGrid = document.getElementById('pagePreviewGrid');
+            let gridHtml = '';
+            for (let i = 0; i < ITEMS_PER_PAGE; i++) {
+                const item = parsedData[i];
+                if (item) {
+                    gridHtml += `
+                        <div class="page-preview-cell">
+                            <div class="cell-postal">〒${escapeHtml(item.postal)}</div>
+                            <div class="cell-name">${escapeHtml(item.name)} 様</div>
+                        </div>
+                    `;
+                } else {
+                    gridHtml += `<div class="page-preview-cell" style="background:#eee;"></div>`;
+                }
+            }
+            pagePreviewGrid.innerHTML = gridHtml;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
+        resetBtn.addEventListener('click', () => {
+            parsedData = [];
+            previewSection.classList.remove('active');
+            fileInput.value = '';
+        });
+
+        generateBtn.addEventListener('click', async () => {
+            if (parsedData.length === 0) {
+                alert('データがありません');
+                return;
+            }
+
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingProgress = document.getElementById('loadingProgress');
+            loadingOverlay.style.display = 'block';
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const renderArea = document.getElementById('renderArea');
+                const pageCount = Math.ceil(parsedData.length / ITEMS_PER_PAGE);
+
+                for (let page = 0; page < pageCount; page++) {
+                    loadingProgress.textContent = `${page + 1} / ${pageCount} ページ`;
+
+                    const startIdx = page * ITEMS_PER_PAGE;
+                    const pageItems = parsedData.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+                    // Create page HTML
+                    let labelsHtml = '';
+                    for (let i = 0; i < ITEMS_PER_PAGE; i++) {
+                        const item = pageItems[i];
+                        if (item) {
+                            labelsHtml += `
+                                <div class="print-label">
+                                    <div class="postal">〒${escapeHtml(item.postal)}</div>
+                                    <div class="address">${escapeHtml(item.address)}</div>
+                                    <div class="name">${escapeHtml(item.name)} 様</div>
+                                </div>
+                            `;
+                        } else {
+                            labelsHtml += `<div class="print-label"></div>`;
+                        }
+                    }
+
+                    const pageHtml = `
+                        <div class="print-page" style="width:210mm; height:297mm; background:white; padding:8mm; box-sizing:border-box; font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;">
+                            <div class="print-grid" style="display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(9,1fr); gap:1mm; height:100%;">
+                                ${labelsHtml}
+                            </div>
+                        </div>
+                    `;
+
+                    // Add styles for labels
+                    renderArea.innerHTML = `
+                        <style>
+                            .print-label {
+                                border: 0.3px solid #ccc;
+                                padding: 2mm 3mm;
+                                display: flex;
+                                flex-direction: column;
+                                justify-content: center;
+                                overflow: hidden;
+                            }
+                            .print-label .postal {
+                                font-size: 10pt;
+                                color: #333;
+                                margin-bottom: 1mm;
+                            }
+                            .print-label .address {
+                                font-size: 8pt;
+                                color: #333;
+                                line-height: 1.4;
+                                margin-bottom: 2mm;
+                            }
+                            .print-label .name {
+                                font-size: 14pt;
+                                font-weight: bold;
+                                color: #333;
+                                text-align: center;
+                            }
+                        </style>
+                        ${pageHtml}
+                    `;
+
+                    await new Promise(resolve => setTimeout(resolve, 100));
+
+                    const pageElement = renderArea.querySelector('.print-page');
+                    const canvas = await html2canvas(pageElement, {
+                        scale: 2,
+                        useCORS: true,
+                        logging: false,
+                        width: 794,  // A4 width at 96dpi
+                        height: 1123 // A4 height at 96dpi
+                    });
+
+                    if (page > 0) {
+                        doc.addPage();
+                    }
+
+                    const imgData = canvas.toDataURL('image/png');
+                    doc.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                }
+
+                renderArea.innerHTML = '';
+                doc.save('address_labels_3x9.pdf');
+
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                alert('PDF生成中にエラーが発生しました: ' + error.message);
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        });
+
+        downloadSample.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sampleData = `郵便番号,住所,名前,電話番号,商品名
+123-4567,大阪府大阪市中央区0-0-000 リバーサイドマンション203,三浦美沙,06-1234-5678,商品A
+100-0001,東京都千代田区千代田1-1,山田太郎,03-1234-5678,商品B
+150-0002,東京都渋谷区渋谷2-21-1 渋谷ヒカリエ10F,鈴木花子,03-9876-5432,商品C
+530-0001,大阪府大阪市北区梅田1-1-1,田中一郎,06-1111-2222,商品D
+160-0023,東京都新宿区西新宿2-8-1,佐藤健太,03-3333-4444,商品E
+460-0008,愛知県名古屋市中区栄3-5-12,高橋真理,052-222-3333,商品F`;
+
+            const blob = new Blob([sampleData], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sample_addresses.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
 </body>
 </html>
